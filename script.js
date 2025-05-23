@@ -20,8 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Modern Mobile Menu with Touch Support
 mobileMenu.addEventListener('click', () => {
-    mobileMenu.classList.toggle('active');
     navLinks.classList.toggle('active');
+    mobileMenu.classList.toggle('active');
+    
+    // Toggle menu icon
+    const icon = mobileMenu.querySelector('i');
+    if (icon.classList.contains('fa-bars')) {
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-times');
+    } else {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+    }
 });
 
 // Add touch support for mobile menu
@@ -302,18 +312,26 @@ document.querySelectorAll('.service-card').forEach(card => {
     });
 });
 
-// Mobile menu toggle
-mobileMenu.addEventListener('click', () => {
-    mobileMenu.classList.toggle('active');
-    navLinks.classList.toggle('active');
-});
-
 // Close mobile menu when clicking outside
 document.addEventListener('click', (e) => {
     if (!mobileMenu.contains(e.target) && !navLinks.contains(e.target)) {
-        mobileMenu.classList.remove('active');
         navLinks.classList.remove('active');
+        mobileMenu.classList.remove('active');
+        const icon = mobileMenu.querySelector('i');
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
     }
+});
+
+// Close mobile menu when clicking on a link
+document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+        mobileMenu.classList.remove('active');
+        const icon = mobileMenu.querySelector('i');
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+    });
 });
 
 // Form validation and submission

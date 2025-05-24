@@ -4,6 +4,7 @@ const mobileMenu = document.querySelector('.mobile-menu');
 const navLinks = document.querySelector('.nav-links');
 const loading = document.querySelector('.loading');
 const notificationContainer = document.querySelector('.notification-container');
+const contactForm = document.querySelector('.contact-form');
 
 let lastScroll = 0;
 
@@ -80,7 +81,6 @@ scrollLinks.forEach(link => {
 });
 
 // Modern Form Validation with Real-time Feedback
-const contactForm = document.querySelector('.contact-form');
 const newsletterForm = document.querySelector('.newsletter-form');
 
 const validateEmail = (email) => {
@@ -146,36 +146,51 @@ function validateInput(input) {
 contactForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Validate all inputs
-    let isValid = true;
-    formInputs.forEach(input => {
-        if (!validateInput(input)) {
-            isValid = false;
-        }
-    });
-
-    if (!isValid) return;
-
-    const submitButton = contactForm.querySelector('button[type="submit"]');
-    const buttonText = submitButton.querySelector('.button-text');
-    const buttonLoader = submitButton.querySelector('.button-loader');
-
     // Show loading state
-    submitButton.classList.add('loading');
+    const submitButton = contactForm.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
     submitButton.disabled = true;
 
     try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        const formData = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            message: document.getElementById('message').value
+        };
+
+        console.log('Attempting to send form data to:', 'http://localhost:5000/api/contact');
+        console.log('Form data:', formData);
+
+        const response = await fetch('http://localhost:5000/api/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        console.log('Response received:', response);
+        console.log('Response status:', response.status);
         
-        // Show success message
-        showMessage(contactForm, 'Thank you for your message. We will get back to you soon!', 'success');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        showNotification('Message sent successfully! We will contact you soon.', 'success');
         contactForm.reset();
     } catch (error) {
-        showMessage(contactForm, 'An error occurred. Please try again later.', 'error');
+        console.error('Error submitting form:', error);
+        showNotification(error.message || 'Failed to send message. Please try again.', 'error');
     } finally {
         // Reset button state
-        submitButton.classList.remove('loading');
+        submitButton.innerHTML = originalButtonText;
         submitButton.disabled = false;
     }
 });
@@ -370,21 +385,16 @@ forms.forEach(form => {
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
-    notification.textContent = message;
+    notification.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+        <span>${message}</span>
+    `;
     
     notificationContainer.appendChild(notification);
     
-    // Trigger animation
-    setTimeout(() => {
-        notification.classList.add('show');
-    }, 10);
-    
     // Remove notification after 5 seconds
     setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
+        notification.remove();
     }, 5000);
 }
 
